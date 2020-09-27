@@ -32,6 +32,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+//serves react frontend
+app.use(express.static('client/build'));
+
 //user authentication
 const authRouter = require('./routes/auth-routes');
 app.use("/auth", authRouter);
