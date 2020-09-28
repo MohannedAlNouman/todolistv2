@@ -9,7 +9,7 @@ export default function Home() {
   let port = process.env.PORT || 8000;
   //specifies where to access the server and DB
   const instance = axios.create({
-    baseURL: "http://localhost:" + port + "/auth"
+    baseURL: "https://mohanned-todolistv2.herokuapp.com/auth"
   });
 
   //pulls user's saved List from DB and stores it in listArr
