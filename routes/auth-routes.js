@@ -25,7 +25,7 @@ authRouter.get('/google/todolist',
   }),
   function(req, res) {
     // Successful authentication, redirect home.
-    res.redirect('http://localhost:3000');
+    res.redirect('/');
   });
 
 //check to see if you're logged in
