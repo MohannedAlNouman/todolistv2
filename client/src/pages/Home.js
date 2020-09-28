@@ -63,7 +63,7 @@ export default function Home() {
             ) : (
               <a
                 className="btn btn-block"
-                href={"http://localhost:" + port + "/auth/google"}
+                href="/auth/google"
                 role="button"
               >
                 <i className="fab fa-google"></i>

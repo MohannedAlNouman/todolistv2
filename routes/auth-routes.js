@@ -21,7 +21,7 @@ authRouter.get('/google',
 //redirect route after auth
 authRouter.get('/google/todolist',
   passport.authenticate('google', {
-    failureRedirect: 'http://localhost:8000/auth/failure'
+    failureRedirect: '/auth/failure'
   }),
   function(req, res) {
     // Successful authentication, redirect home.
