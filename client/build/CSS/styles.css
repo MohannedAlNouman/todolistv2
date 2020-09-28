@@ -1,8 +1,8 @@
-.invis{
+.invis {
   display: none;
 }
 
-.vis:hover .invis{
+.vis:hover .invis {
   display: inline;
   font-size: 16px;
 }
