@@ -1,3 +1,4 @@
+import "../config";
 import React, {useState, useEffect, useRef} from "react";
 import ListItem from "./ListItem";
 import axios from "axios";
