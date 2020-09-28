@@ -11,7 +11,7 @@ export default function MyLists() {
   let port = process.env.PORT || 8000;
   //specifies where to access the server and DB
   const instance = axios.create({
-    baseURL: "https://mohanned-todolistv2.herokuapp.com/auth"
+    baseURL: "https://mohanned-todolistv2.herokuapp.com"
   });
 
   //pulls user's saved List from DB and stores it in listArr
