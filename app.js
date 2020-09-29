@@ -10,7 +10,7 @@ app.use(bodyParser.json())
 
 app.use(
   cors({
-    origin: "http://mohanned-todolistv2.herokuapp.com",
+    origin: "https://mohanned-todolistv2.herokuapp.com",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true // allow session cookie from browser to pass through
   })

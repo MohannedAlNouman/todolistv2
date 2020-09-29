@@ -1,4 +1,3 @@
-import "../config";
 import React, {useState, useEffect} from "react";
 import {Link} from "react-router-dom";
 import axios from "axios";
@@ -8,7 +7,6 @@ export default function MyLists() {
 
   const [userLists, setUserLists] = useState([{}]);
 
-  let port = process.env.PORT || 8000;
   //specifies where to access the server and DB
   const instance = axios.create({
     baseURL: "https://mohanned-todolistv2.herokuapp.com"

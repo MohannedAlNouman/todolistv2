@@ -1,4 +1,3 @@
-import "../config";
 import React, {useState, useEffect} from "react";
 import {Link} from "react-router-dom";
 import axios from "axios";
@@ -6,7 +5,6 @@ import axios from "axios";
 export default function Home() {
   const [user, setUser] = useState({});
 
-  let port = process.env.PORT || 8000;
   //specifies where to access the server and DB
   const instance = axios.create({
     baseURL: "https://mohanned-todolistv2.herokuapp.com/auth"
@@ -39,7 +37,7 @@ export default function Home() {
 
   return (
     <div>
-    <h1>Version 0000000000001 </h1>
+      <h1>Version 0000000000002 </h1>
       <h6>
         BEFORE YOU USE THIS WEBSITE, KNOW THAT I (MOHANNED AL NOUMAN) HAVE
         ACCESS TO ALL OF YOUR LISTS SO PLEASE DON'T POST ANYTHING PRIVATE

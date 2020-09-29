@@ -1,4 +1,3 @@
-import "../config";
 import React, {useState, useEffect, useRef} from "react";
 import ListItem from "./ListItem";
 import axios from "axios";
@@ -24,7 +23,7 @@ export default function List(props) {
   const [submitClass, setSubmitClass] = useState("invis");
 
   /*****************Ajax requests******************/
-  let port = process.env.PORT || 8000;
+
   //specifies where to access the server and DB
   const instance = axios.create({
     baseURL: "https://mohanned-todolistv2.herokuapp.com/api"
