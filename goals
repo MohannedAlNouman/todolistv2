@@ -1,11 +1,12 @@
-functionality goals:
-1. Deploy site
-2. Wildcard
+Goals:
 
-Cosmetic goals:
-1. CSS
-2. Timer
-3. Coloring groups
-4. Change position of items
-5. Collapsible sublists
-6. Checkboxes to cross items out
+1. Refactor code
+2. Add settings page (collapsible setting)
+3. HTTPS
+4. CSS
+5. Change buttons to smaller icons
+6. Move input box to relevant position on list
+7. Checkboxes to cross items out
+8. Change positions of items
+9. Color different groups?
+10. Timer? (with email/text alerts?)

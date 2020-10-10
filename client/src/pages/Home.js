@@ -37,7 +37,7 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Version 0000000000002 </h1>
+      <h1>Version 0000000000003 </h1>
       <h6>
         BEFORE YOU USE THIS WEBSITE, KNOW THAT I (MOHANNED AL NOUMAN) HAVE
         ACCESS TO ALL OF YOUR LISTS SO PLEASE DON'T POST ANYTHING PRIVATE
