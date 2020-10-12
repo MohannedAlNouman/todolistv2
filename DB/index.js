@@ -1,13 +1,12 @@
 require('dotenv').config();
 
+//process.env.TODOLIST_MONGODB
 const mongoose = require('mongoose');
-mongoose.connect(process.env.TODOLIST_MONGODB, {
+mongoose.connect('mongodb://localhost:27017/todolistDB', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
-mongoose.set('useNewUrlParser', true);
-mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
 
 module.exports = mongoose;

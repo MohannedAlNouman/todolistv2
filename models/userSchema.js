@@ -1,5 +1,4 @@
 const mongoose = require('../DB/index');
-const findOrCreate = require('mongoose-findorcreate');
 const passportLocalMongoose = require('passport-local-mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -11,7 +10,6 @@ const userSchema = new mongoose.Schema({
     listId: String
   }]
 });
-userSchema.plugin(findOrCreate);
 userSchema.plugin(passportLocalMongoose);
 const User = new mongoose.model("User", userSchema);
 

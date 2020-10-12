@@ -5,9 +5,10 @@ import axios from "axios";
 export default function Home() {
   const [user, setUser] = useState({});
 
+  //https://mohanned-todolistv2.herokuapp.com/auth
   //specifies where to access the server and DB
   const instance = axios.create({
-    baseURL: "https://mohanned-todolistv2.herokuapp.com/auth"
+    baseURL: "http://localhost:3000/auth"
   });
 
   //pulls user's saved List from DB and stores it in listArr
@@ -37,7 +38,7 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Version 0000000000003 </h1>
+      <h1>Version 0000000000004 </h1>
       <h6>
         BEFORE YOU USE THIS WEBSITE, KNOW THAT I (MOHANNED AL NOUMAN) HAVE
         ACCESS TO ALL OF YOUR LISTS SO PLEASE DON'T POST ANYTHING PRIVATE
@@ -60,11 +61,7 @@ export default function Home() {
                 Logout
               </button>
             ) : (
-              <a
-                className="btn btn-block"
-                href="/auth/google"
-                role="button"
-              >
+              <a className="btn btn-block" href="/auth/google" role="button">
                 <i className="fab fa-google"></i>
                 Login with Google
               </a>
