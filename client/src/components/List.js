@@ -12,11 +12,11 @@ export default function List(props) {
   //stores user's items in an array
   const [listArr, setListArr] = useState([]);
 
-  //changes webpage's title to match that of the user's list
+  //tracks the lists title
   const [listTitle, setListTitle] = useState("");
 
-  //tracks what's in the input text box
-  const [listID, setListID] = useState(props.listId ? "/" + props.listId : "");
+  //contains the list ID if available to save/update the list
+  const [listID, setListID] = useState(props.listId ? props.listId : "");
 
   //reveals the submit text box and button when the list has finished loading.
   //this is done to prevent possible loss of sync between the displayed list and list on the DB during initial loading of webpage
@@ -24,15 +24,18 @@ export default function List(props) {
 
   /*****************Ajax requests******************/
 
-  //specifies where to access the server and DB
+  //https://mohanned-todolistv2.herokuapp.com/api/
+  //specifies where to access the server to route to the DB
   const instance = axios.create({
-    baseURL: "https://mohanned-todolistv2.herokuapp.com/api"
+    baseURL: "http://localhost:3000/api/"
   });
 
   //pulls user's saved List from DB and stores it in listArr
   function fetchList() {
     instance
-      .get(listID, {withCredentials: true})
+      .get(listID, {
+        withCredentials: true
+      })
       .then(function(response) {
         setListArr([...response.data.items]);
         setListTitle(response.data.name);
@@ -43,8 +46,7 @@ export default function List(props) {
   }
 
   //Allows us to prevent multiple post requests from occuring simultaneously
-  const CancelToken = axios.CancelToken;
-  const source = CancelToken.source();
+  const cancelTokenSource = axios.CancelToken.source();
 
   //stores the user's list in the DB
   function postList() {
@@ -54,11 +56,14 @@ export default function List(props) {
     };
     instance
       .post(listID, dataSent, {
-        cancelToken: source.token,
+        cancelToken: cancelTokenSource.token,
         withCredentials: true
       })
       .then(function(response) {
-        setListID("/" + response.data);
+        //if a new list was saved, it pulls that lists ID
+        if (!listID) {
+          setListID(response.data);
+        }
       })
       .catch(function(error) {
         console.log(error);
@@ -83,25 +88,17 @@ export default function List(props) {
   instance.interceptors.response.use(
     function(response) {
       pendingAxiosCalls--;
-      console.log(
-        "------------  Previous request was successful. Remaining Ajax requests: " +
-          pendingAxiosCalls
-      );
       return response;
     },
     function(error) {
       pendingAxiosCalls--;
-      console.log(
-        "------------  Previous request was unsuccessful. Remaining Ajax requests: " +
-          pendingAxiosCalls
-      );
       return Promise.reject(error);
     }
   );
 
   /*****************Side effects******************/
 
-  //Ignores first two changes for the next side effect
+  //Prevents a get request from being sent as this is a new list
   const noFetchNeeded = useRef(listID ? false : true);
 
   //calls fetchList on page load and only on page load
@@ -112,26 +109,25 @@ export default function List(props) {
   }, []);
 
   //Ignores first two changes for the next side effect
-  const initial2Renders = useRef(2);
+  const skipFirst2Renders = useRef(2);
 
-  //calls postList whenever listArr is changed.
+  //calls postList whenever listArr or listTitle is changed.
   //ignores the first 2 changes, which are: 1. on page load and 2. When listArr is populated from fetching the DB.
   useEffect(() => {
     if (props.save) {
-      if (initial2Renders.current > 0) {
-        initial2Renders.current--;
+      if (skipFirst2Renders.current > 0) {
+        skipFirst2Renders.current--;
         if (noFetchNeeded.current) {
-          initial2Renders.current--;
+          skipFirst2Renders.current--;
         }
         //changes the class name of the submit box and button to empty to display them after your list has finished loading
-        if (initial2Renders.current === 0) {
+        if (skipFirst2Renders.current === 0) {
           setSubmitClass();
         }
       } else {
         //ensures only 1 axios call is ever pending at any time.
         if (pendingAxiosCalls === 1) {
-          console.log("cancel previous axios call");
-          source.cancel();
+          cancelTokenSource.cancel();
           //sends most up to date axios call.
           postList();
         } else {
@@ -163,7 +159,9 @@ export default function List(props) {
 
   //submits new item from the input text box to the array and clears text box
   function handleSubmit(e) {
-    const newListItem = {item: input};
+    const newListItem = {
+      item: input
+    };
     setListArr(prev => {
       return [...prev, newListItem];
     });
@@ -228,8 +226,17 @@ export default function List(props) {
         const currIndex = targetIndex[0];
         if (targetIndex.length === 1) {
           targetArray[currIndex].items = targetArray[currIndex].items
-            ? [...targetArray[currIndex].items, {item: input}]
-            : [{item: input}];
+            ? [
+                ...targetArray[currIndex].items,
+                {
+                  item: input
+                }
+              ]
+            : [
+                {
+                  item: input
+                }
+              ];
         } else {
           targetIndex.splice(0, 1);
           addOrCreateSubList(targetArray[currIndex].items, targetIndex);

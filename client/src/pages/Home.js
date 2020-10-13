@@ -38,12 +38,12 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Version 0000000000004 </h1>
+      <h1>Version 0000000000006 </h1>
       <h6>
         BEFORE YOU USE THIS WEBSITE, KNOW THAT I (MOHANNED AL NOUMAN) HAVE
         ACCESS TO ALL OF YOUR LISTS SO PLEASE DON'T POST ANYTHING PRIVATE
       </h6>
-      <h6>This website may contain a few (probably a lot) of bugs</h6>
+      <h6>This website may contain a few bugs</h6>
       <h2>
         Hello {user.name ? user.name : "anonymous"} and welcome to Mohanned's
         List App!
@@ -73,7 +73,7 @@ export default function Home() {
       <br />
 
       {user.name ? (
-        <Link className={user.name ? "" : "invis"} to="/MyLists">
+        <Link to="/MyLists">
           <button variant="outlined">Click here to view your lists</button>
         </Link>
       ) : (

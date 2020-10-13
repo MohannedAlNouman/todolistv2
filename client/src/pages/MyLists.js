@@ -7,9 +7,10 @@ export default function MyLists() {
 
   const [userLists, setUserLists] = useState([{}]);
 
+  //https://mohanned-todolistv2.herokuapp.com
   //specifies where to access the server and DB
   const instance = axios.create({
-    baseURL: "https://mohanned-todolistv2.herokuapp.com"
+    baseURL: "http://localhost:3000"
   });
 
   //pulls user's saved List from DB and stores it in listArr
@@ -44,7 +45,7 @@ export default function MyLists() {
 
   return (
     <div>
-      <h1>Hello {user.name ? user.name : "anonymous"}, here are your lists:</h1>
+      <h1>Hello {user.name}, here are your lists:</h1>
 
       {userLists.length > 0 ? (
         userLists.map((element, index) => {
@@ -78,7 +79,7 @@ export default function MyLists() {
           );
         })
       ) : (
-        <p>You don't have any lists yet! Get started!</p>
+        <p>You don't have any lists yet! Get started below!</p>
       )}
 
       <Link
