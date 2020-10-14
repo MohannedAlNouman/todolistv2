@@ -10,7 +10,7 @@ export default function MyLists() {
   //https://mohanned-todolistv2.herokuapp.com
   //specifies where to access the server and DB
   const instance = axios.create({
-    baseURL: "http://localhost:3000"
+    baseURL: "http://localhost:3001"
   });
 
   //pulls user's saved List from DB and stores it in listArr

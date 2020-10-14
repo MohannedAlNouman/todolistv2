@@ -8,12 +8,22 @@ function ListItem(props) {
         <button
           className="invis"
           onClick={e => {
+            props.handSubI(e, props.cumIndex);
+          }}
+          type="submit"
+          name="createTxtInput"
+        >
+          <i className="fas fa-indent"></i>
+        </button>
+        <button
+          className="invis"
+          onClick={e => {
             props.handUpda(e, props.cumIndex);
           }}
           type="submit"
           name="updateButton"
         >
-          Update
+          <i className="fas fa-edit"></i>
         </button>
         <button
           className="invis"
@@ -23,17 +33,7 @@ function ListItem(props) {
           type="submit"
           name="deleteButton"
         >
-          Delete
-        </button>
-        <button
-          className="invis"
-          onClick={e => {
-            props.handSubI(e, props.cumIndex);
-          }}
-          type="submit"
-          name="subItemButton"
-        >
-          Add to sublist
+          <i className="fas fa-trash-alt"></i>
         </button>
       </li>
     </form>

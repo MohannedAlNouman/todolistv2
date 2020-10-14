@@ -8,7 +8,7 @@ export default function Home() {
   //https://mohanned-todolistv2.herokuapp.com/auth
   //specifies where to access the server and DB
   const instance = axios.create({
-    baseURL: "http://localhost:3000/auth"
+    baseURL: "http://localhost:3001/auth"
   });
 
   //pulls user's saved List from DB and stores it in listArr
@@ -61,7 +61,11 @@ export default function Home() {
                 Logout
               </button>
             ) : (
-              <a className="btn btn-block" href="/auth/google" role="button">
+              <a
+                className="btn btn-block"
+                href="http://localhost:3001/auth/google"
+                role="button"
+              >
                 <i className="fab fa-google"></i>
                 Login with Google
               </a>
