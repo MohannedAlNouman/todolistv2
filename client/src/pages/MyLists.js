@@ -3,9 +3,9 @@ import {Link} from "react-router-dom";
 import axios from "axios";
 
 export default function MyLists() {
-  const [user, setUser] = useState({lists: []});
+  const [user, setUser] = useState({});
 
-  const [userLists, setUserLists] = useState([{}]);
+  const [userLists, setUserLists] = useState([]);
 
   //https://mohanned-todolistv2.herokuapp.com
   //specifies where to access the server and DB

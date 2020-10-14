@@ -144,13 +144,22 @@ export default function List(props) {
     }
   }, [listArr, listTitle]);
 
-  //Creates ref for our input text box to allow for autofocusing whenever listArr is changed
+  //Creates ref for our input text box to allow for autofocusing
   const inputTxt = useRef(null);
 
   //Autofocuses our input text box whenever listArr or submitClass (controls input text box class names) is changed
   useEffect(() => {
     inputTxt.current.focus();
   }, [listArr, submitClass]);
+
+  //Creates ref for our sub item input text box to allow for autofocusing
+  const subItemTxt = useRef(null);
+
+  // Autofocuses our sub item input text box whenever listArr is changed
+  useEffect(() => {
+    subItemTxt.current&&subItemTxt.current.focus();
+  }, [listArr]);
+
 
   /*****************State variable handlers/CRUD******************/
 
@@ -162,11 +171,25 @@ export default function List(props) {
 
   //submits new item from the input text box to the array and clears text box
   function handleSubmit(e) {
-    const newListItem = {
-      item: input
-    };
     setListArr(prev => {
-      return [...prev, newListItem];
+      //clones the array
+      const prevClone = prev.map(a => Object.assign({}, a));
+
+      //checks if a subitem text box is open, if so, it clears the text box and closes it
+      if (subItemInputLimiter.current){
+        setSubItemInput("");
+        collapsePrevSubItemInput(prevClone);
+        subItemInputLimiter.current = false;
+        subItemInputFound.current = false;
+      }
+
+      // creates the new item to be added
+      const newListItem = {
+        item: input
+      };
+
+      //adds the item to the array
+      return [...prevClone, newListItem];
     });
     setInput("");
     e.preventDefault();
@@ -272,29 +295,22 @@ export default function List(props) {
   //breaks out of the collapsePrevSubItemInput function
   const subItemInputFound = useRef(false);
 
-  function encapsulate(array) {
-    //closes the previous subitem text input
-    function collapsePrevSubItemInput(targetArray) {
-      for (let i = 0; i < targetArray.length; i++) {
-        if (subItemInputFound.current) {
+  //closes the previous subitem text input
+  function collapsePrevSubItemInput(targetArray) {
+    for (let i = 0; i < targetArray.length; i++) {
+      if (subItemInputFound.current) {
+        break;
+      } else {
+        if (targetArray[i].txtInput) {
+          targetArray[i].txtInput = false;
+          subItemInputFound.current = true;
           break;
-        } else {
-          if (targetArray[i].txtInput) {
-            targetArray[i].txtInput = false;
-            subItemInputFound.current = true;
-            break;
-          }
-          targetArray[i].items &&
-            targetArray[i].items.length !== 0 &&
-            collapsePrevSubItemInput(targetArray[i].items);
         }
+        targetArray[i].items &&
+          targetArray[i].items.length !== 0 &&
+          collapsePrevSubItemInput(targetArray[i].items);
       }
     }
-
-    collapsePrevSubItemInput(array);
-    setListArr(array, () => {
-      console.log(listArr);
-    });
   }
 
   //opens the subitem text input under the specified list item
@@ -306,22 +322,18 @@ export default function List(props) {
       function locateTarget(targetArray, targetIndex) {
         const currIndex = targetIndex[0];
         if (targetIndex.length === 1) {
-          setSubItemInput();
+          setSubItemInput("");
           if (targetArray[currIndex].txtInput) {
-            console.log("closing the only input");
             targetArray[currIndex].txtInput = false;
             subItemInputLimiter.current = false;
           } else if (!subItemInputLimiter.current) {
-            console.log("opening 1 input");
             targetArray[currIndex].txtInput = true;
             subItemInputLimiter.current = true;
           } else {
-            console.log("closing the other input to open one");
-            encapsulate(listArr);
+            collapsePrevSubItemInput(prevClone);
             subItemInputFound.current = false;
             targetArray[currIndex].txtInput = true;
           }
-          console.log(listArr);
         } else {
           targetIndex.splice(0, 1);
           locateTarget(targetArray[currIndex].items, targetIndex);
@@ -362,8 +374,9 @@ export default function List(props) {
                     className={submitClass}
                     onChange={handleSubItemChange}
                     type="text"
-                    name="userInput"
+                    name="subItemInput"
                     value={subItemInput}
+                    ref = {subItemTxt}
                   />
                   <button
                     className={submitClass}
