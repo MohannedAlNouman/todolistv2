@@ -91,10 +91,12 @@ export default function List(props) {
   instance.interceptors.response.use(
     function(response) {
       pendingAxiosCalls--;
+      console.log("Successful request. Remaining: " + pendingAxiosCalls);
       return response;
     },
     function(error) {
       pendingAxiosCalls--;
+      console.log("Failed request: Remaining: " + pendingAxiosCalls);
       return Promise.reject(error);
     }
   );
@@ -129,8 +131,8 @@ export default function List(props) {
         }
       } else {
         //ensures only 1 axios call is ever pending at any time.
-        if (pendingAxiosCalls === 1) {
-          cancelTokenSource.cancel();
+        if (pendingAxiosCalls >= 1) {
+          cancelTokenSource.cancel("post cancelled");
           //sends most up to date axios call.
           postList();
         } else {
@@ -157,9 +159,8 @@ export default function List(props) {
 
   // Autofocuses our sub item input text box whenever listArr is changed
   useEffect(() => {
-    subItemTxt.current&&subItemTxt.current.focus();
+    subItemTxt.current && subItemTxt.current.focus();
   }, [listArr]);
-
 
   /*****************State variable handlers/CRUD******************/
 
@@ -176,7 +177,7 @@ export default function List(props) {
       const prevClone = prev.map(a => Object.assign({}, a));
 
       //checks if a subitem text box is open, if so, it clears the text box and closes it
-      if (subItemInputLimiter.current){
+      if (subItemInputLimiter.current) {
         setSubItemInput("");
         collapsePrevSubItemInput(prevClone);
         subItemInputLimiter.current = false;
@@ -283,6 +284,29 @@ export default function List(props) {
     e.preventDefault();
   }
 
+  function handleCrossOut(e, cumIndex) {
+    setListArr(prev => {
+      const prevClone = prev.map(a => Object.assign({}, a));
+
+      //recursive function used to reach the exact list item
+      function strikeThrough(targetArray, targetIndex) {
+        const currIndex = targetIndex[0];
+        if (targetIndex.length === 1) {
+          targetArray[currIndex].strikeThrough = !targetArray[currIndex]
+            .strikeThrough;
+        } else {
+          targetIndex.splice(0, 1);
+          strikeThrough(targetArray[currIndex].items, targetIndex);
+        }
+      }
+
+      //calls the recursive function
+      strikeThrough(prevClone, cumIndex);
+      return prevClone;
+    });
+    e.preventDefault();
+  }
+
   //changes list title
   function handleTitleChange() {
     setListTitle(input);
@@ -358,12 +382,14 @@ export default function List(props) {
           return (
             <div>
               <ListItem
+                striThro={object.strikeThrough && "strikeThrough"}
                 content={object.item}
                 key={[...parInd, index]}
                 cumIndex={[...parInd, index]}
                 handSubI={showSubItemInput}
                 handUpda={handleUpdate}
                 handDele={handleDelete}
+                handCros={handleCrossOut}
               />
               {object.items &&
                 object.items.length !== 0 &&
@@ -376,7 +402,7 @@ export default function List(props) {
                     type="text"
                     name="subItemInput"
                     value={subItemInput}
-                    ref = {subItemTxt}
+                    ref={subItemTxt}
                   />
                   <button
                     className={submitClass}

@@ -11,8 +11,10 @@ app.use(bodyParser.json());
 
 const db = require("./DB/index");
 
+//not needed for production
 const cors = require("cors");
 
+//not needed for production
 app.use(
   cors({
     origin: "http://localhost:3000",

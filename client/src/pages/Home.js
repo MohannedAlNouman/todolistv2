@@ -38,7 +38,7 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Version 0000000000006 </h1>
+      <h1>Version 009 </h1>
       <h6>
         BEFORE YOU USE THIS WEBSITE, KNOW THAT I (MOHANNED AL NOUMAN) HAVE
         ACCESS TO ALL OF YOUR LISTS SO PLEASE DON'T POST ANYTHING PRIVATE
@@ -63,6 +63,7 @@ export default function Home() {
             ) : (
               <a
                 className="btn btn-block"
+                ///auth/google
                 href="http://localhost:3001/auth/google"
                 role="button"
               >

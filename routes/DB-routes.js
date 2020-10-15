@@ -63,7 +63,13 @@ dbRouter.post("/:listID", isLoggedIn, (req, res) => {
               break;
             }
           }
-          user.save();
+          user.save(err=>{
+            if (err){
+              res.send(err);
+            } else{
+              res.send("recieved");
+            }
+          });
         }
       );
     });

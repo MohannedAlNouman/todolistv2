@@ -50,9 +50,9 @@ export default function MyLists() {
       {userLists.length > 0 ? (
         userLists.map((element, index) => {
           return (
-            <div>
+            <div key={index}>
               <p className="vis">
-                {element.listName ? element.listName + " list" : "unnamed list"}
+                {element.listName ? element.listName + " list" : "Unnamed list"}
                 <Link
                   className="invis"
                   to={{
@@ -62,7 +62,7 @@ export default function MyLists() {
                   }}
                 >
                   <button variant="outlined">
-                    Click here to access this list.
+                    <i className="fas fa-edit"></i>
                   </button>
                 </Link>
                 <button
@@ -72,7 +72,7 @@ export default function MyLists() {
                   type="submit"
                   name="deleteButton"
                 >
-                  Delete
+                  <i className="fas fa-trash-alt"></i>
                 </button>
               </p>
             </div>
