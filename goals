@@ -1,11 +1,7 @@
 Goals:
 
-2. Add settings page (collapsible setting)
-3. HTTPS
-4. CSS
-5. Change buttons to smaller icons
-6. Move input box to relevant position on list
-7. Checkboxes to cross items out
-8. Change positions of items
-9. Color different groups?
-10. Timer? (with email/text alerts?)
+title
+undo
+start settings page (collapsible and dark mode)
+CSS
+Timer and text alerts?

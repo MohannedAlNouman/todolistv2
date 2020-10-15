@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef} from "react";
-import ListItem from "./ListItem";
 import axios from "axios";
+import ListItem from "./ListItem";
 
 //displays the list of items and subitems
 export default function List(props) {
@@ -10,7 +10,7 @@ export default function List(props) {
   const [input, setInput] = useState("");
 
   //tracks what's in the update/subitem text box
-  const [subItemInput, setSubItemInput] = useState("");
+  const [movingInput, setMovingInput] = useState("");
 
   //stores user's items in an array
   const [listArr, setListArr] = useState([]);
@@ -22,7 +22,7 @@ export default function List(props) {
   const [listID, setListID] = useState(props.listId ? props.listId : "");
 
   //reveals the submit text box and button when the list has finished loading.
-  //this is done to prevent possible loss of sync between the displayed list and list on the DB during initial loading of webpage
+  //this is done to prevent possible loss of sync between the client list and the DB list during initial loading of webpage
   const [submitClass, setSubmitClass] = useState("invis");
 
   /*****************Ajax requests******************/
@@ -57,6 +57,7 @@ export default function List(props) {
       name: listTitle,
       items: listArr
     };
+
     instance
       .post(listID, dataSent, {
         cancelToken: cancelTokenSource.token,
@@ -74,12 +75,12 @@ export default function List(props) {
   }
 
   //tracks pending Axios calls
-  let pendingAxiosCalls = 0;
+  const pendingAxiosCalls = useRef(0);
 
   //tracks increases to pendingAxiosCalls
   instance.interceptors.request.use(
     function(config) {
-      pendingAxiosCalls++;
+      pendingAxiosCalls.current++;
       return config;
     },
     function(error) {
@@ -90,20 +91,18 @@ export default function List(props) {
   //tracks decreases/resolutions of pendingAxiosCalls
   instance.interceptors.response.use(
     function(response) {
-      pendingAxiosCalls--;
-      console.log("Successful request. Remaining: " + pendingAxiosCalls);
+      pendingAxiosCalls.current--;
       return response;
     },
     function(error) {
-      pendingAxiosCalls--;
-      console.log("Failed request: Remaining: " + pendingAxiosCalls);
+      pendingAxiosCalls.current--;
       return Promise.reject(error);
     }
   );
 
   /*****************Side effects******************/
 
-  //Prevents a get request from being sent as this is a new list
+  //If a new list is created, no get request is needed
   const noFetchNeeded = useRef(listID ? false : true);
 
   //calls fetchList on page load and only on page load
@@ -118,6 +117,7 @@ export default function List(props) {
 
   //calls postList whenever listArr or listTitle is changed.
   //ignores the first 2 changes, which are: 1. on page load and 2. When listArr is populated from fetching the DB.
+  //If props.save is set to false, the post request is skipped
   useEffect(() => {
     if (props.save) {
       if (skipFirst2Renders.current > 0) {
@@ -131,7 +131,7 @@ export default function List(props) {
         }
       } else {
         //ensures only 1 axios call is ever pending at any time.
-        if (pendingAxiosCalls >= 1) {
+        if (pendingAxiosCalls.current >= 1) {
           cancelTokenSource.cancel("post cancelled");
           //sends most up to date axios call.
           postList();
@@ -149,20 +149,33 @@ export default function List(props) {
   //Creates ref for our input text box to allow for autofocusing
   const inputTxt = useRef(null);
 
-  //Autofocuses our input text box whenever listArr or submitClass (controls input text box class names) is changed
+  //Only autofocuses after a root list item is added
+  const autoFocus = useRef(true);
+
+  //Autofocuses our input text box whenever a root list item is added to listArr
   useEffect(() => {
-    inputTxt.current.focus();
+    if (autoFocus.current) {
+      inputTxt.current.focus();
+    } else {
+      autoFocus.current = true;
+    }
   }, [listArr, submitClass]);
 
-  //Creates ref for our sub item input text box to allow for autofocusing
+  //Creates ref for our moving input to allow for autofocusing
   const subItemTxt = useRef(null);
 
-  // Autofocuses our sub item input text box whenever listArr is changed
+  // Autofocuses our moving input whenever a subitem is created
   useEffect(() => {
     subItemTxt.current && subItemTxt.current.focus();
   }, [listArr]);
 
   /*****************State variable handlers/CRUD******************/
+
+  //changes the list title
+  function handleTitleChange() {
+    setListTitle(input);
+    setInput("");
+  }
 
   //handles changes of input text box
   function handleChange(e) {
@@ -170,18 +183,18 @@ export default function List(props) {
     setInput(newInput);
   }
 
-  //submits new item from the input text box to the array and clears text box
+  //submits new item from the input text box to the list array and clears the text box
   function handleSubmit(e) {
     setListArr(prev => {
       //clones the array
       const prevClone = prev.map(a => Object.assign({}, a));
 
-      //checks if a subitem text box is open, if so, it clears the text box and closes it
-      if (subItemInputLimiter.current) {
-        setSubItemInput("");
-        collapsePrevSubItemInput(prevClone);
-        subItemInputLimiter.current = false;
-        subItemInputFound.current = false;
+      //checks if a moving input is open, if so, it clears the text box and closes it
+      if (movingInputLimiter.current) {
+        setMovingInput("");
+        collapsePrevMovingInput(prevClone);
+        movingInputLimiter.current = false;
+        movingInputFound.current = false;
       }
 
       // creates the new item to be added
@@ -196,13 +209,46 @@ export default function List(props) {
     e.preventDefault();
   }
 
-  //handles changes of subitem text box
-  function handleSubItemChange(e) {
+  //handles changes of the moving input text box
+  function handleMovingInputChange(e) {
     const newInput = e.target.value;
-    setSubItemInput(newInput);
+    setMovingInput(newInput);
   }
 
-  //Adds sub item to sublist or creates new sublist
+  //updates the targeted item
+  function handleUpdate(e, index) {
+    setListArr(prev => {
+      const prevClone = prev.map(a => Object.assign({}, a));
+
+      //recursive function used to reach the exact list item
+      function updateTarget(targetArray, targetIndex) {
+        const currIndex = targetIndex[0];
+        if (targetIndex.length === 1) {
+          targetArray[currIndex].item = movingInput;
+        } else {
+          targetIndex.splice(0, 1);
+          updateTarget(targetArray[currIndex].items, targetIndex);
+        }
+      }
+
+      //calls the recursive function
+      updateTarget(prevClone, index);
+
+      //closes the moving input
+      collapsePrevMovingInput(prevClone);
+      movingInputLimiter.current = false;
+      movingInputFound.current = false;
+
+      //prevents autofocusing on the input text box
+      autoFocus.current = false;
+
+      return prevClone;
+    });
+    setMovingInput("");
+    e.preventDefault();
+  }
+
+  //Adds a sub item to the sublist or creates new sublist
   function handleSubItemSubmit(e, cumIndex) {
     setListArr(prev => {
       const prevClone = prev.map(a => Object.assign({}, a));
@@ -215,12 +261,12 @@ export default function List(props) {
             ? [
                 ...targetArray[currIndex].items,
                 {
-                  item: subItemInput
+                  item: movingInput
                 }
               ]
             : [
                 {
-                  item: subItemInput
+                  item: movingInput
                 }
               ];
         } else {
@@ -233,38 +279,22 @@ export default function List(props) {
       addOrCreateSubList(prevClone, cumIndex);
       return prevClone;
     });
-    setSubItemInput("");
+    setMovingInput("");
     e.preventDefault();
-  }
-
-  //updates the targeted list item
-  function handleUpdate(e, index) {
-    setListArr(prev => {
-      const prevClone = prev.map(a => Object.assign({}, a));
-
-      //recursive function used to reach the exact list item
-      function updateTarget(targetArray, targetIndex) {
-        const currIndex = targetIndex[0];
-        if (targetIndex.length === 1) {
-          targetArray[currIndex].item = input;
-        } else {
-          targetIndex.splice(0, 1);
-          updateTarget(targetArray[currIndex].items, targetIndex);
-        }
-      }
-
-      //calls the recursive function
-      updateTarget(prevClone, index);
-      return prevClone;
-    });
-    e.preventDefault();
-    setInput("");
   }
 
   //deletes selected item from array using the specified index/indices
   function handleDelete(e, index) {
     setListArr(prev => {
       const prevClone = prev.map(a => Object.assign({}, a));
+
+      //closes out of any open moving inputs
+      if (movingInputLimiter.current) {
+        setMovingInput("");
+        collapsePrevMovingInput(prevClone);
+        movingInputLimiter.current = false;
+        movingInputFound.current = false;
+      }
 
       //recursive function used to reach the exact list item
       function deleteTarget(targetArray, targetIndex) {
@@ -277,6 +307,9 @@ export default function List(props) {
         }
       }
 
+      //prevents autofocusing on the input text box
+      autoFocus.current = false;
+
       //calls the recursive function
       deleteTarget(prevClone, index);
       return prevClone;
@@ -284,9 +317,18 @@ export default function List(props) {
     e.preventDefault();
   }
 
+  //crosses out the selected list item
   function handleCrossOut(e, cumIndex) {
     setListArr(prev => {
       const prevClone = prev.map(a => Object.assign({}, a));
+
+      //checks if a moving input is open, if so, it clears the text box and closes it
+      if (movingInputLimiter.current) {
+        setMovingInput("");
+        collapsePrevMovingInput(prevClone);
+        movingInputLimiter.current = false;
+        movingInputFound.current = false;
+      }
 
       //recursive function used to reach the exact list item
       function strikeThrough(targetArray, targetIndex) {
@@ -300,6 +342,9 @@ export default function List(props) {
         }
       }
 
+      //prevents autofocusing on the input text box
+      autoFocus.current = false;
+
       //calls the recursive function
       strikeThrough(prevClone, cumIndex);
       return prevClone;
@@ -307,56 +352,81 @@ export default function List(props) {
     e.preventDefault();
   }
 
-  //changes list title
-  function handleTitleChange() {
-    setListTitle(input);
-    setInput("");
-  }
+  //tracks if there is a moving input open currently
+  const movingInputLimiter = useRef(false);
 
-  //tracks if there is a subitem text input open currently
-  const subItemInputLimiter = useRef(false);
+  //breaks out of the collapse moving input function below
+  const movingInputFound = useRef(false);
 
-  //breaks out of the collapsePrevSubItemInput function
-  const subItemInputFound = useRef(false);
-
-  //closes the previous subitem text input
-  function collapsePrevSubItemInput(targetArray) {
+  //closes the previous moving input
+  function collapsePrevMovingInput(targetArray) {
     for (let i = 0; i < targetArray.length; i++) {
-      if (subItemInputFound.current) {
+      if (movingInputFound.current) {
         break;
       } else {
         if (targetArray[i].txtInput) {
           targetArray[i].txtInput = false;
-          subItemInputFound.current = true;
+          movingInputFound.current = true;
+          break;
+        } else if (targetArray[i].editItem) {
+          targetArray[i].editItem = false;
+          movingInputFound.current = true;
           break;
         }
+        //recursively calls self to check through all items and subitems
         targetArray[i].items &&
           targetArray[i].items.length !== 0 &&
-          collapsePrevSubItemInput(targetArray[i].items);
+          collapsePrevMovingInput(targetArray[i].items);
       }
     }
   }
 
-  //opens the subitem text input under the specified list item
-  function showSubItemInput(e, cumIndex) {
+  //opens the moving input to the relevant position.
+  //for updates, the input replaces the item.
+  //for sublists, the input is placed below the root item
+  function showmovingInput(e, cumIndex, variation) {
     setListArr(prev => {
       const prevClone = prev.map(a => Object.assign({}, a));
 
       //recursive function used to reach the exact list item
       function locateTarget(targetArray, targetIndex) {
         const currIndex = targetIndex[0];
+
         if (targetIndex.length === 1) {
-          setSubItemInput("");
-          if (targetArray[currIndex].txtInput) {
-            targetArray[currIndex].txtInput = false;
-            subItemInputLimiter.current = false;
-          } else if (!subItemInputLimiter.current) {
-            targetArray[currIndex].txtInput = true;
-            subItemInputLimiter.current = true;
-          } else {
-            collapsePrevSubItemInput(prevClone);
-            subItemInputFound.current = false;
-            targetArray[currIndex].txtInput = true;
+          if (variation === 0) {
+            //Replaces item with moving input to update the item
+            setMovingInput(targetArray[currIndex].item); //populates moving input with previous item value
+            if (targetArray[currIndex].editItem) {
+              //closing the only movable input thats open
+              targetArray[currIndex].editItem = false;
+              movingInputLimiter.current = false;
+            } else if (!movingInputLimiter.current) {
+              //opening an input when none are currently open
+              targetArray[currIndex].editItem = true;
+              movingInputLimiter.current = true;
+            } else {
+              //closing the only other input open and opening one up at the target location
+              collapsePrevMovingInput(prevClone);
+              movingInputFound.current = false;
+              targetArray[currIndex].editItem = true;
+            }
+          } else if (variation === 1) {
+            //places moving input below root item to allow for subitems
+            setMovingInput(""); //clears moving input before its made visible
+            if (targetArray[currIndex].txtInput) {
+              //closing the only movable input thats open
+              targetArray[currIndex].txtInput = false;
+              movingInputLimiter.current = false;
+            } else if (!movingInputLimiter.current) {
+              //opening an input when none are currently open
+              targetArray[currIndex].txtInput = true;
+              movingInputLimiter.current = true;
+            } else {
+              //closing the only other input open and opening one up at the target location
+              collapsePrevMovingInput(prevClone);
+              movingInputFound.current = false;
+              targetArray[currIndex].txtInput = true;
+            }
           }
         } else {
           targetIndex.splice(0, 1);
@@ -381,27 +451,55 @@ export default function List(props) {
         {newList.map((object, index) => {
           return (
             <div>
-              <ListItem
-                striThro={object.strikeThrough && "strikeThrough"}
-                content={object.item}
-                key={[...parInd, index]}
-                cumIndex={[...parInd, index]}
-                handSubI={showSubItemInput}
-                handUpda={handleUpdate}
-                handDele={handleDelete}
-                handCros={handleCrossOut}
-              />
-              {object.items &&
+              {//if the update function is called, the moving input replaces the list item
+              object.editItem ? (
+                <li>
+                  <form>
+                    <input
+                      className={submitClass}
+                      onChange={handleMovingInputChange}
+                      type="text"
+                      name="movingInput"
+                      value={movingInput}
+                      ref={subItemTxt}
+                    />
+                    <button
+                      className={submitClass}
+                      onClick={e => {
+                        handleUpdate(e, [...parInd, index]);
+                      }}
+                      type="submit"
+                      name="editButton"
+                    >
+                      <i className="fas fa-plus-circle"></i>
+                    </button>
+                  </form>
+                </li>
+              ) : (
+                //otherwise the list item is shown
+                <ListItem
+                  striThro={object.strikeThrough && "strikeThrough"}
+                  content={object.item}
+                  key={[...parInd, index]}
+                  cumIndex={[...parInd, index]}
+                  showInpu={showmovingInput}
+                  handDele={handleDelete}
+                  handCros={handleCrossOut}
+                />
+              )}
+              {//displays all subitems below the root list item
+              object.items &&
                 object.items.length !== 0 &&
                 displayNewList(object.items, [...parInd, index])}
-              {object.txtInput && (
+              {//if the sub item function is called, a moving input is placed below the last subitem
+              object.txtInput && (
                 <form>
                   <input
                     className={submitClass}
-                    onChange={handleSubItemChange}
+                    onChange={handleMovingInputChange}
                     type="text"
-                    name="subItemInput"
-                    value={subItemInput}
+                    name="movingInput"
+                    value={movingInput}
                     ref={subItemTxt}
                   />
                   <button
@@ -410,7 +508,7 @@ export default function List(props) {
                       handleSubItemSubmit(e, [...parInd, index]);
                     }}
                     type="submit"
-                    name="submitButton"
+                    name="subItemButton"
                   >
                     <i className="fas fa-plus-circle"></i>
                   </button>
@@ -428,7 +526,9 @@ export default function List(props) {
   return (
     <div>
       <h3 className="vis">
-        {listTitle ? listTitle : "New"} list
+        {listTitle
+          ? listTitle + " list"
+          : "Unnamed list (hover over to change)"}
         <button
           className="invis"
           onClick={handleTitleChange}

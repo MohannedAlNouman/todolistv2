@@ -10,3 +10,8 @@
 .strikeThrough{
   text-decoration: line-through;
 }
+
+.text{
+  display: inline-block;
+  padding: 2px 10px 2px 2px;
+}
