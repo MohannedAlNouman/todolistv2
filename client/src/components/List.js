@@ -21,14 +21,14 @@ export default function List(props) {
   //stores how many undo's are stored in listHistory
   const [undosRemaining, setUndosRemaining] = useState(0);
 
-  //contains the list ID if available to save/update the list
-  const [listID, setListID] = useState(props.listId ? props.listId : "");
-
   //reveals the submit text box and button when the list has finished loading.
   //this is done to prevent possible loss of sync between the client list and the DB list during initial loading of webpage
   const [submitClass, setSubmitClass] = useState("invis");
 
   /*****************Ajax requests******************/
+
+  //contains the list ID if available to save/update the list
+  const listID = useRef(props.listId ? props.listId : "");
 
   //https://mohanned-todolistv2.herokuapp.com/api/
   //specifies where to access the server to route to the DB
@@ -39,10 +39,11 @@ export default function List(props) {
   //pulls user's saved List from DB and stores it in listArr
   function fetchList() {
     instance
-      .get(listID, {
+      .get(listID.current, {
         withCredentials: true
       })
       .then(function(response) {
+        actualChange.current = true;
         setListArr([...response.data.items]);
         setListTitle({
           title: response.data.name
@@ -64,14 +65,14 @@ export default function List(props) {
     };
 
     instance
-      .post(listID, dataSent, {
+      .post(listID.current, dataSent, {
         cancelToken: cancelTokenSource.token,
         withCredentials: true
       })
       .then(function(response) {
         //if a new list was saved, it pulls that lists ID
-        if (!listID) {
-          setListID(response.data);
+        if (!listID.current) {
+          listID.current = response.data;
         }
       })
       .catch(function(error) {
@@ -108,7 +109,7 @@ export default function List(props) {
   /*****************Side effects******************/
 
   //If a new list is created, no get request is needed
-  const noFetchNeeded = useRef(listID ? false : true);
+  const noFetchNeeded = useRef(listID.current ? false : true);
 
   //calls fetchList on page load and only on page load
   useEffect(() => {
@@ -161,22 +162,24 @@ export default function List(props) {
   //ignores changes to other key values
   const actualChange = useRef(true);
 
-  //Takes a snapshot of the list whenever a change is made and stores the value
+  //Takes a snapshot of the list whenever a change is made and stores that value
   useEffect(() => {
     if (actualChange.current) {
       actualChange.current = false;
-      const listArrClone = listArr.map(a => Object.assign({}, a));
 
-      // collapsePrevMovingInput(listArrClone);
+      //creates a deep clone of listArr
+      const listArrClone = JSON.parse(JSON.stringify(listArr));
+
+      //adds the cloned list to list history
       listHistory.current.push(listArrClone);
-      //caps off list history to the past 4 changes,
-      //although the most recent is equal to the current list.
-      //so in practicality, it holds the past 3 changes to the list
+
+      //caps off list history to the past <limit> changes
       if (listHistory.current.length >= limit + 2) {
         listHistory.current.shift();
       }
-      setUndosRemaining(listHistory.current.length - 1);
-      console.log(listHistory.current);
+      setUndosRemaining(
+        listHistory.current.length - (noFetchNeeded.current ? 1 : 2)
+      );
     }
   }, [listArr]);
 
@@ -693,9 +696,9 @@ export default function List(props) {
       setListArr(() => {
         listHistory.current.pop();
         const prevList = listHistory.current.pop();
-        // collapsePrevMovingInput(prevList);
-        // movingInputLimiter.current = false;
-        // movingInputFound.current = false;
+        collapsePrevMovingInput(prevList);
+        movingInputLimiter.current = false;
+        movingInputFound.current = false;
         return prevList;
       });
     }
