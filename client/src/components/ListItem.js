@@ -33,7 +33,7 @@ function ListItem(props) {
           type="submit"
           name="deleteButton"
         >
-          <i className="far fa-times-circle"></i>
+          <i className="fas fa-times-circle"></i>
         </button>
       </li>
     </form>

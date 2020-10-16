@@ -21,6 +21,9 @@ export default function List(props) {
   //stores how many undo's are stored in listHistory
   const [undosRemaining, setUndosRemaining] = useState(0);
 
+  //stores how many undo's are stored in listHistory
+  const [redosRemaining, setRedosRemaining] = useState(0);
+
   //reveals the submit text box and button when the list has finished loading.
   //this is done to prevent possible loss of sync between the client list and the DB list during initial loading of webpage
   const [submitClass, setSubmitClass] = useState("invis");
@@ -108,13 +111,11 @@ export default function List(props) {
 
   /*****************Side effects******************/
 
-  //If a new list is created, no get request is needed
-  const noFetchNeeded = useRef(listID.current ? false : true);
-
-  //calls fetchList on page load and only on page load
+  //calls fetchList on page load and only on page load if a listID is present
   useEffect(() => {
-    if (!noFetchNeeded.current) {
+    if (listID.current) {
       fetchList();
+      fetchEqualizer.current = true;
     }
   }, []);
 
@@ -128,7 +129,7 @@ export default function List(props) {
     if (props.save) {
       if (skipFirst2Renders.current > 0) {
         skipFirst2Renders.current--;
-        if (noFetchNeeded.current) {
+        if (!listID.current) {
           skipFirst2Renders.current = 0;
         }
         //changes the class name of the submit box and button to empty to display them after your list has finished loading
@@ -155,17 +156,33 @@ export default function List(props) {
   //tracks the history of changes to the list
   const listHistory = useRef([]);
 
+  //tracks the history of changes to the list
+  const futureListHistory = useRef([]);
+
   //Specifies how many changes to store
-  const limit = 10;
+  const limit = useRef(10);
+
+  //equalizes the number of undos for fetched lists and newly created lists
+  const fetchEqualizer = useRef(false);
 
   //tracks changes to items and subitems
   //ignores changes to other key values
   const actualChange = useRef(true);
 
+  //if a change to the list is made, any stored future lists are deleted
+  const deleteRedoHistory = useRef(true);
+
   //Takes a snapshot of the list whenever a change is made and stores that value
   useEffect(() => {
     if (actualChange.current) {
       actualChange.current = false;
+
+      if (redosRemaining > 0 && deleteRedoHistory.current) {
+        futureListHistory.current.splice(0, futureListHistory.current.length);
+        setRedosRemaining(futureListHistory.current.length);
+      }
+
+      deleteRedoHistory.current = true;
 
       //creates a deep clone of listArr
       const listArrClone = JSON.parse(JSON.stringify(listArr));
@@ -173,47 +190,78 @@ export default function List(props) {
       //adds the cloned list to list history
       listHistory.current.push(listArrClone);
 
+      //equalizes the number of undos for fetched lists and newly created lists
+      if (fetchEqualizer.current && listHistory.current.length > 1) {
+        listHistory.current.splice(0, 1);
+        fetchEqualizer.current = false;
+      }
+
       //caps off list history to the past <limit> changes
-      if (listHistory.current.length >= limit + 2) {
+      if (listHistory.current.length >= limit.current + 2) {
         listHistory.current.shift();
       }
-      setUndosRemaining(
-        listHistory.current.length - (noFetchNeeded.current ? 1 : 2)
-      );
+      setUndosRemaining(listHistory.current.length - 1);
     }
   }, [listArr]);
 
-  //Creates ref for our input text box to allow for autoFocus.currenting
+  //Creates ref for our input text box to allow for autofocusing
   const inputTxt = useRef(null);
 
-  //Only autoFocus.currentes after a root list item is added
-  const autoFocus = useRef(true);
+  //Only autofocuses after a root list item is added
+  const autoFocus = useRef(false);
 
-  //autoFocus.currentes our input text box whenever a root list item is added to listArr
+  //Autofocuses our input text box whenever a root list item is added to our list
   useEffect(() => {
     if (autoFocus.current) {
       inputTxt.current.focus();
-    } else {
-      autoFocus.current = true;
+      autoFocus.current = false;
     }
   }, [listArr, submitClass]);
 
-  //Creates ref for our moving input to allow for autoFocus.currenting
+  //Creates ref for our moving input to allow for autofocusing
   const movingInputTxt = useRef(null);
 
-  // autoFocus.currentes our moving input whenever a subitem is created
+  //Autofocuses our moving input whenever a subitem is created
   useEffect(() => {
     movingInputTxt.current && movingInputTxt.current.focus();
   }, [listArr]);
 
   const titleTxt = useRef(null);
 
-  // autoFocus.currentes our moving input whenever a subitem is created
+  //Autofocuses our moving input whenever a subitem is created
   useEffect(() => {
     titleTxt.current && titleTxt.current.focus();
   }, [listTitle]);
 
   /*****************State variable handlers/CRUD******************/
+
+  //closes the title text box and the moving input if they are open
+  function closeTitleAndMovingInput(variation) {
+    if (variation === 1 || variation === 3) {
+      //closes out of title edit box
+      if (listTitle.edit) {
+        setListTitle(prevTitle => {
+          const prevTitleClone = Object.assign({}, prevTitle);
+          prevTitleClone.edit = false;
+          return prevTitleClone;
+        });
+      }
+    }
+
+    if (variation === 2 || variation === 3) {
+      //checks if a moving input is open, if so, it clears the text box and closes it
+      if (movingInputLimiter.current) {
+        setListArr(prev => {
+          const prevClone = prev.map(a => Object.assign({}, a));
+          setMovingInput("");
+          collapsePrevMovingInput(prevClone);
+          movingInputLimiter.current = false;
+          movingInputFound.current = false;
+          return prevClone;
+        });
+      }
+    }
+  }
 
   //handles changes of input text box
   function handleChange(e) {
@@ -223,27 +271,17 @@ export default function List(props) {
 
   //submits new item from the input text box to the list array and clears the text box
   function handleSubmit(e) {
+    //autofocuses the input text box
+    autoFocus.current = true;
+
     //saves change to the list history array
     actualChange.current = true;
 
+    closeTitleAndMovingInput(3);
+
     setListArr(prev => {
-      //clones the array
+      //creates a shallow clone of the array
       const prevClone = prev.map(a => Object.assign({}, a));
-
-      //closes out of title edit box
-      setListTitle(prevTitle => {
-        const prevTitleClone = Object.assign({}, prevTitle);
-        prevTitleClone.edit = false;
-        return prevTitleClone;
-      });
-
-      //checks if a moving input is open, if so, it clears the text box and closes it
-      if (movingInputLimiter.current) {
-        setMovingInput("");
-        collapsePrevMovingInput(prevClone);
-        movingInputLimiter.current = false;
-        movingInputFound.current = false;
-      }
 
       // creates the new item to be added
       const newListItem = {
@@ -268,15 +306,10 @@ export default function List(props) {
     //saves change to the list history array
     actualChange.current = true;
 
+    closeTitleAndMovingInput(1);
+
     setListArr(prev => {
       const prevClone = prev.map(a => Object.assign({}, a));
-
-      //closes out of title edit box
-      setListTitle(prevTitle => {
-        const prevTitleClone = Object.assign({}, prevTitle);
-        prevTitleClone.edit = false;
-        return prevTitleClone;
-      });
 
       //recursive function used to reach the exact list item
       function updateTarget(targetArray, targetIndex) {
@@ -292,17 +325,10 @@ export default function List(props) {
       //calls the recursive function
       updateTarget(prevClone, index);
 
-      //closes the moving input
-      collapsePrevMovingInput(prevClone);
-      movingInputLimiter.current = false;
-      movingInputFound.current = false;
-
-      //prevents autoFocus.currenting on the input text box
-      autoFocus.current = false;
+      closeTitleAndMovingInput(2);
 
       return prevClone;
     });
-    setMovingInput("");
     e.preventDefault();
   }
 
@@ -311,15 +337,10 @@ export default function List(props) {
     //saves change to the list history array
     actualChange.current = true;
 
+    closeTitleAndMovingInput(1);
+
     setListArr(prev => {
       const prevClone = prev.map(a => Object.assign({}, a));
-
-      //closes out of title edit box
-      setListTitle(prevTitle => {
-        const prevTitleClone = Object.assign({}, prevTitle);
-        prevTitleClone.edit = false;
-        return prevTitleClone;
-      });
 
       //recursive function used to add the subitem to the specified list item
       function addOrCreateSubList(targetArray, targetIndex) {
@@ -356,23 +377,10 @@ export default function List(props) {
     //saves change to the list history array
     actualChange.current = true;
 
+    closeTitleAndMovingInput(3);
+
     setListArr(prev => {
       const prevClone = prev.map(a => Object.assign({}, a));
-
-      //closes out of title edit box
-      setListTitle(prevTitle => {
-        const prevTitleClone = Object.assign({}, prevTitle);
-        prevTitleClone.edit = false;
-        return prevTitleClone;
-      });
-
-      //closes out of any open moving inputs
-      if (movingInputLimiter.current) {
-        setMovingInput("");
-        collapsePrevMovingInput(prevClone);
-        movingInputLimiter.current = false;
-        movingInputFound.current = false;
-      }
 
       //recursive function used to reach the exact list item
       function deleteTarget(targetArray, targetIndex) {
@@ -384,9 +392,6 @@ export default function List(props) {
           deleteTarget(targetArray[currIndex].items, targetIndex);
         }
       }
-
-      //prevents autoFocus.currenting on the input text box
-      autoFocus.current = false;
 
       //calls the recursive function
       deleteTarget(prevClone, index);
@@ -400,23 +405,10 @@ export default function List(props) {
     //saves change to the list history array
     actualChange.current = true;
 
+    closeTitleAndMovingInput(3);
+
     setListArr(prev => {
       const prevClone = prev.map(a => Object.assign({}, a));
-
-      //closes out of title edit box
-      setListTitle(prevTitle => {
-        const prevTitleClone = Object.assign({}, prevTitle);
-        prevTitleClone.edit = false;
-        return prevTitleClone;
-      });
-
-      //checks if a moving input is open, if so, it clears the text box and closes it
-      if (movingInputLimiter.current) {
-        setMovingInput("");
-        collapsePrevMovingInput(prevClone);
-        movingInputLimiter.current = false;
-        movingInputFound.current = false;
-      }
 
       //recursive function used to reach the exact list item
       function strikeThrough(targetArray, targetIndex) {
@@ -429,9 +421,6 @@ export default function List(props) {
           strikeThrough(targetArray[currIndex].items, targetIndex);
         }
       }
-
-      //prevents autoFocus.currenting on the input text box
-      autoFocus.current = false;
 
       //calls the recursive function
       strikeThrough(prevClone, cumIndex);
@@ -480,12 +469,7 @@ export default function List(props) {
       function locateTarget(targetArray, targetIndex) {
         const currIndex = targetIndex[0];
 
-        //closes out of title edit box
-        setListTitle(prevTitle => {
-          const prevTitleClone = Object.assign({}, prevTitle);
-          prevTitleClone.edit = false;
-          return prevTitleClone;
-        });
+        closeTitleAndMovingInput(1);
 
         if (targetIndex.length === 1) {
           if (variation === 0) {
@@ -534,6 +518,62 @@ export default function List(props) {
       return prevClone;
     });
     e.preventDefault();
+  }
+
+  function showTitleInput() {
+    setListTitle(prevTitle => {
+      const prevTitleClone = Object.assign({}, prevTitle);
+      prevTitleClone.edit = true;
+      return prevTitleClone;
+    });
+
+    closeTitleAndMovingInput(2);
+  }
+
+  //changes the list title
+  function handleTitleChange(e) {
+    const newTitle = e.target.value;
+    setListTitle(prevTitle => {
+      const prevTitleClone = Object.assign({}, prevTitle);
+      prevTitleClone.title = newTitle;
+      return prevTitleClone;
+    });
+  }
+
+  function undo() {
+    if (undosRemaining > 0) {
+      actualChange.current = true;
+      deleteRedoHistory.current = false;
+
+      setListArr(() => {
+        futureListHistory.current.push(listHistory.current.pop());
+        setRedosRemaining(futureListHistory.current.length);
+
+        const prevList = listHistory.current.pop();
+        collapsePrevMovingInput(prevList);
+        movingInputLimiter.current = false;
+        movingInputFound.current = false;
+        return prevList;
+      });
+    }
+  }
+
+  function redo() {
+    if (redosRemaining > 0) {
+      actualChange.current = true;
+      deleteRedoHistory.current = false;
+
+      setListArr(() => {
+        const prevList = futureListHistory.current.pop();
+        setRedosRemaining(futureListHistory.current.length);
+
+        //removes any open moving inputs
+        collapsePrevMovingInput(prevList);
+        movingInputLimiter.current = false;
+        movingInputFound.current = false;
+        return prevList;
+      });
+    }
   }
 
   //displays all list and sublist items recursively.
@@ -627,7 +667,13 @@ export default function List(props) {
           ref={titleTxt}
         />
         {" list "}
-        <button onClick={handleTitleSubmit} type="submit" name="changeTitle">
+        <button
+          onClick={() => {
+            closeTitleAndMovingInput(1);
+          }}
+          type="submit"
+          name="changeTitle"
+        >
           <i className="fas fa-plus-circle"></i>
         </button>
       </form>
@@ -648,67 +694,29 @@ export default function List(props) {
     );
   }
 
-  function showTitleInput() {
-    setListTitle(prevTitle => {
-      const prevTitleClone = Object.assign({}, prevTitle);
-      prevTitleClone.edit = true;
-      return prevTitleClone;
-    });
-
-    setListArr(prev => {
-      const prevClone = prev.map(a => Object.assign({}, a));
-      //checks if a moving input is open, if so, it clears the text box and closes it
-      if (movingInputLimiter.current) {
-        setMovingInput("");
-        collapsePrevMovingInput(prevClone);
-        movingInputLimiter.current = false;
-        movingInputFound.current = false;
-      }
-      return prevClone;
-    });
-  }
-
-  //changes the list title
-  function handleTitleChange(e) {
-    const newTitle = e.target.value;
-    setListTitle(prevTitle => {
-      const prevTitleClone = Object.assign({}, prevTitle);
-      prevTitleClone.title = newTitle;
-      return prevTitleClone;
-    });
-  }
-
-  function handleTitleSubmit() {
-    setListTitle(prevTitle => {
-      const prevTitleClone = Object.assign({}, prevTitle);
-      prevTitleClone.edit = false;
-      return prevTitleClone;
-    });
-  }
-
-  function undo() {
-    if (undosRemaining === 0) {
-      console.log("Unable to undo anymore.");
-    } else {
-      autoFocus.current = false;
-      actualChange.current = true;
-
-      setListArr(() => {
-        listHistory.current.pop();
-        const prevList = listHistory.current.pop();
-        collapsePrevMovingInput(prevList);
-        movingInputLimiter.current = false;
-        movingInputFound.current = false;
-        return prevList;
-      });
-    }
-  }
-
   /*****************Return value******************/
 
   return (
     <div>
       {displayTitle()}
+      <button
+        className={submitClass}
+        onClick={undo}
+        type="submit"
+        name="undoButton"
+      >
+        <i className="fas fa-undo"></i>
+      </button>
+      {" x " + undosRemaining + "  "}
+      <button
+        className={submitClass}
+        onClick={redo}
+        type="submit"
+        name="redoButton"
+      >
+        <i className="fas fa-redo"></i>
+      </button>
+      {" x " + redosRemaining}
       {displayNewList(listArr)}
       <form>
         <input
@@ -728,16 +736,6 @@ export default function List(props) {
           <i className="fas fa-plus-circle"></i>
         </button>
       </form>
-      <br />
-      <button
-        className={submitClass}
-        onClick={undo}
-        type="submit"
-        name="undoButton"
-      >
-        <i className="fas fa-undo"></i>
-      </button>
-      {" " + undosRemaining + " undo's remaining."}
     </div>
   );
 }
