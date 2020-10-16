@@ -5,7 +5,7 @@ function ListItem(props) {
     <form action="" method="">
       <li className="vis">
         <div //moves text box to current item to update
-          className={"text " + props.striThro}
+          className={"listItemText " + props.striThro}
           onClick={e => {
             props.handCros(e, props.cumIndex);
           }}
@@ -33,7 +33,7 @@ function ListItem(props) {
           type="submit"
           name="deleteButton"
         >
-          <i class="far fa-times-circle"></i>
+          <i className="far fa-times-circle"></i>
         </button>
       </li>
     </form>
