@@ -3,7 +3,7 @@ import {Navbar, Nav} from "react-bootstrap";
 import {Link} from "react-router-dom";
 import axios from "axios";
 
-export default function Home() {
+export default function Home(props) {
   const [user, setUser] = useState({});
 
   //https://mohanned-todolistv2.herokuapp.com/auth
@@ -35,20 +35,48 @@ export default function Home() {
       });
   }
 
-  useEffect(fetchUser, []);
+  useEffect(() => {
+    if (props.location.logout) {
+      logUserOut();
+    } else {
+      fetchUser();
+    }
+  }, []);
 
-  return (
-    <div>
+  function displayNavbar() {
+    return (
       <Navbar bg="dark" variant="dark">
         <Navbar.Brand>
           List App <span className="version">version 1.0.0</span>
         </Navbar.Brand>
         <Nav className="mr-auto">
-          <Nav.Link href="/">Home</Nav.Link>
-          <Nav.Link href="/CreateList">Create a new list</Nav.Link>
-          {user.name && <Nav.Link href="MyLists">My Lists</Nav.Link>}
+          <Link className="nav-link" to="/">
+            Home
+          </Link>
+          <Link
+            className="nav-link"
+            to={{
+              pathname: "/CreateList",
+              save: user.name ? true : false
+            }}
+          >
+            Create a new list
+          </Link>
+          {user.name && (
+            <Link className="nav-link" to="/MyLists">
+              My Lists
+            </Link>
+          )}
           {user.name ? (
-            <Nav.Link onClick={logUserOut}>Logout</Nav.Link>
+            <Link
+              className="nav-link"
+              to={{
+                pathname: "/",
+                logout: true
+              }}
+            >
+              Logout
+            </Link>
           ) : (
             <a
               className="nav-link"
@@ -62,27 +90,33 @@ export default function Home() {
           )}
         </Nav>
       </Navbar>
+    );
+  }
+
+  return (
+    <div>
+      {displayNavbar()}
       <div className="homePageText">
         <h2>Hello {user.name ? user.name : "anonymous"}.</h2>
       </div>
       <div className="homePageText">
-        <h5>About this app:</h5>
-        <h6>
+        <h4>About this app:</h4>
+        <h5>
           This app uses your google login to store your lists. You can access
           these lists from any device as long as you're logged in to the same
           account.
-        </h6>
+        </h5>
       </div>
       <div className="homePageText">
-        <h5>Basic list controls</h5>
-        <h6>
+        <h4>Basic list controls</h4>
+        <h5>
           Clicking a list item once crosses it out. Double clicking an item
-          allows you to edit it. There are also buttons to delete an item and to
-          add subitems.
-        </h6>
+          allows you to edit it. Buttons to delete and to create sublists appear
+          when you hover over a list item.
+        </h5>
       </div>
       <div className="homePageText">
-        <h5>What are you waiting for! Get started by logging in above.</h5>
+        <h4>What are you waiting for! Get started by logging in above.</h4>
       </div>
     </div>
   );

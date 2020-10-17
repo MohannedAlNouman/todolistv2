@@ -41,6 +41,10 @@ app.use(passport.session());
 app.use(express.static("client/build"));
 
 //user authentication routes, handles logging in and logging out
+const directRouter = require("./routes/direct-routes");
+app.use("/", directRouter);
+
+//user authentication routes, handles logging in and logging out
 const authRouter = require("./routes/auth-routes");
 app.use("/auth", authRouter);
 

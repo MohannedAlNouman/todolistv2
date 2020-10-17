@@ -208,13 +208,15 @@ export default function List(props) {
   const inputTxt = useRef(null);
 
   //Only autofocuses after a root list item is added
-  const autoFocus = useRef(false);
+  const autoFocus = useRef(true);
 
   //Autofocuses our input text box whenever a root list item is added to our list
   useEffect(() => {
-    if (autoFocus.current) {
-      inputTxt.current.focus();
-      autoFocus.current = false;
+    if (!submitClass) {
+      if (autoFocus.current) {
+        inputTxt.current.focus();
+        autoFocus.current = false;
+      }
     }
   }, [listArr, submitClass]);
 
@@ -582,7 +584,7 @@ export default function List(props) {
   function displayNewList(newList, parentIndex) {
     const parInd = parentIndex ? parentIndex : [];
     return (
-      <ul>
+      <ul className="listBox">
         {newList.map((object, index) => {
           return (
             <div>
@@ -591,7 +593,7 @@ export default function List(props) {
                 <li>
                   <form>
                     <input
-                      className={submitClass}
+                      className={submitClass + " textInput"}
                       onChange={handleMovingInputChange}
                       type="text"
                       name="movingInput"
@@ -630,7 +632,7 @@ export default function List(props) {
               object.txtInput && (
                 <form>
                   <input
-                    className={submitClass}
+                    className={submitClass + " textInput"}
                     onChange={handleMovingInputChange}
                     type="text"
                     name="movingInput"
@@ -660,6 +662,7 @@ export default function List(props) {
     return listTitle.edit ? (
       <form>
         <input
+          className="textInput listTitle"
           onChange={handleTitleChange}
           type="text"
           name="title"
@@ -678,9 +681,9 @@ export default function List(props) {
         </button>
       </form>
     ) : (
-      <h3 className="vis">
+      <h3 className="vis listTitle">
         {listTitle.title
-          ? listTitle.title + " list"
+          ? listTitle.title + " list "
           : "Unnamed list (hover over to change)"}
         <button
           className="invis"
@@ -697,10 +700,10 @@ export default function List(props) {
   /*****************Return value******************/
 
   return (
-    <div>
+    <div className="list">
       {displayTitle()}
       <button
-        className={submitClass}
+        className={submitClass + " undoBtn"}
         onClick={undo}
         type="submit"
         name="undoButton"
@@ -709,7 +712,7 @@ export default function List(props) {
       </button>
       {" x " + undosRemaining + "  "}
       <button
-        className={submitClass}
+        className={submitClass + " redoBtn"}
         onClick={redo}
         type="submit"
         name="redoButton"
@@ -720,7 +723,7 @@ export default function List(props) {
       {displayNewList(listArr)}
       <form>
         <input
-          className={submitClass}
+          className={submitClass + " textInput"}
           onChange={handleChange}
           type="text"
           name="userInput"

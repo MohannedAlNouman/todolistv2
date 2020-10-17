@@ -16,7 +16,7 @@ function ListItem(props) {
           {props.content}
         </div>
         <button //moves text box below current item for subitems
-          className="invis"
+          className="invis editBtn"
           onClick={e => {
             props.showInpu(e, props.cumIndex, 1);
           }}
@@ -26,7 +26,7 @@ function ListItem(props) {
           <i className="fas fa-indent"></i>
         </button>
         <button //deletes current item
-          className="invis"
+          className="invis editBtn"
           onClick={e => {
             props.handDele(e, props.cumIndex);
           }}

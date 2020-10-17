@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from "react";
 import {Link} from "react-router-dom";
+import {Navbar, Nav} from "react-bootstrap";
 import axios from "axios";
 
 export default function MyLists() {
@@ -43,15 +44,63 @@ export default function MyLists() {
       });
   }
 
-  return (
-    <div>
-      <h1>Hello {user.name}, here are your lists:</h1>
+  function displayNavbar() {
+    return (
+      <Navbar bg="dark" variant="dark">
+        <Navbar.Brand>
+          List App <span className="version">version 1.0.0</span>
+        </Navbar.Brand>
+        <Nav className="mr-auto">
+          <Link className="nav-link" to="/">
+            Home
+          </Link>
+          <Link
+            className="nav-link"
+            to={{
+              pathname: "/CreateList",
+              save: user.name ? true : false
+            }}
+          >
+            Create a new list
+          </Link>
+          {user.name && (
+            <Link className="nav-link" to="/MyLists">
+              My Lists
+            </Link>
+          )}
+          {user.name ? (
+            <Link
+              className="nav-link"
+              to={{
+                pathname: "/",
+                logout: true
+              }}
+            >
+              Logout
+            </Link>
+          ) : (
+            <a
+              className="nav-link"
+              ///auth/google
+              href="http://localhost:3001/auth/google"
+              role="button"
+            >
+              <i className="fab fa-google"></i>
+              {" Login with Google"}
+            </a>
+          )}
+        </Nav>
+      </Navbar>
+    );
+  }
 
-      {userLists.length > 0 ? (
-        userLists.map((element, index) => {
+  function displayListOfLists() {
+    return userLists.length > 0 ? (
+      <div>
+        {userLists.map((element, index) => {
           return (
-            <div key={index}>
-              <p className="vis">
+            <div className="listItems" key={index}>
+              <h5 className="vis">
                 {element.listName ? element.listName + " list" : "Unnamed list"}
                 <Link
                   className="invis"
@@ -72,33 +121,33 @@ export default function MyLists() {
                   type="submit"
                   name="deleteButton"
                 >
-                  <i className="fas fa-trash-alt"></i>
+                  X
                 </button>
-              </p>
+              </h5>
             </div>
           );
-        })
-      ) : (
-        <p>You don't have any lists yet! Get started below!</p>
-      )}
+        })}
+        <h6 className="myList">*Hover over an item to edit/delete it.*</h6>
+      </div>
+    ) : (
+      user.name && (
+        <h5 className="myList">
+          You don't have any lists yet! Get started by clicking 'Create a new
+          list" above!
+        </h5>
+      )
+    );
+  }
 
-      <Link
-        to={{
-          pathname: "/CreateList",
-          save: true
-        }}
-      >
-        <button variant="outlined">Click here to create a new list.</button>
-      </Link>
-
-      <br />
-      <br />
-
-      <Link to="/">
-        <button variant="outlined">
-          Click here to return to the homepage.
-        </button>
-      </Link>
+  return (
+    <div>
+      {displayNavbar()}
+      <h4 className="myList">
+        {user.name
+          ? user.name + "'s lists:"
+          : "Oh no, you were logged out! Log in again to access your lists"}
+      </h4>
+      {displayListOfLists()}
     </div>
   );
 }
