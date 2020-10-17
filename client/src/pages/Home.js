@@ -68,13 +68,7 @@ export default function Home(props) {
             </Link>
           )}
           {user.name ? (
-            <Link
-              className="nav-link"
-              to={{
-                pathname: "/",
-                logout: true
-              }}
-            >
+            <Link className="nav-link" onClick={logUserOut}>
               Logout
             </Link>
           ) : (
