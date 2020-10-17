@@ -104,9 +104,11 @@ export default function Home(props) {
       <div className="homePageText">
         <h4>Basic list controls</h4>
         <h5>
-          Clicking a list item once crosses it out. Double clicking an item
-          allows you to edit it. Buttons to delete and to create sublists appear
-          when you hover over a list item.
+          You can edit the title by clicking the edit button when you hover over
+          the title. Clicking a list item once crosses it out. Double clicking
+          an item allows you to edit it. Buttons to delete and to create
+          sublists appear when you hover over a list item. All items can be
+          submitted using the enter button.
         </h5>
       </div>
       <div className="homePageText">
