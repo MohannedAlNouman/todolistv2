@@ -46,7 +46,7 @@ export default function MyLists() {
 
   function displayNavbar() {
     return (
-      <Navbar bg="dark" variant="dark">
+      <Navbar className="myNavbar" bg="dark" variant="dark">
         <Navbar.Brand>
           List App <span className="version">version 1.0.0</span>
         </Navbar.Brand>
@@ -110,12 +110,12 @@ export default function MyLists() {
                     save: true
                   }}
                 >
-                  <button variant="outlined">
+                  <button className="invis myButton">
                     <i className="fas fa-edit"></i>
                   </button>
                 </Link>
                 <button
-                  className="invis"
+                  className="invis myButton"
                   value={element.listId}
                   onClick={deleteList}
                   type="submit"

@@ -45,9 +45,9 @@ export default function Home(props) {
 
   function displayNavbar() {
     return (
-      <Navbar bg="dark" variant="dark">
+      <Navbar className="myNavbar" bg="dark" variant="dark">
         <Navbar.Brand>
-          List App <span className="version">version 1.0.0</span>
+          List App <span className="version">version 1.0.1</span>
         </Navbar.Brand>
         <Nav className="mr-auto">
           <Link className="nav-link" to="/">

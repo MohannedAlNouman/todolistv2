@@ -601,7 +601,7 @@ export default function List(props) {
                       ref={movingInputTxt}
                     />
                     <button
-                      className={submitClass}
+                      className={submitClass + " myButton"}
                       onClick={e => {
                         handleUpdate(e, [...parInd, index]);
                       }}
@@ -640,7 +640,7 @@ export default function List(props) {
                     ref={movingInputTxt}
                   />
                   <button
-                    className={submitClass}
+                    className={submitClass + " myButton"}
                     onClick={e => {
                       handleSubItemSubmit(e, [...parInd, index]);
                     }}
@@ -671,6 +671,7 @@ export default function List(props) {
         />
         {" list "}
         <button
+          className="myButton"
           onClick={() => {
             closeTitleAndMovingInput(1);
           }}
@@ -686,7 +687,7 @@ export default function List(props) {
           ? listTitle.title + " list "
           : "Unnamed list (hover over to change)"}
         <button
-          className="invis"
+          className="invis myButton"
           onClick={showTitleInput}
           type="submit"
           name="changeTitle"
@@ -703,7 +704,7 @@ export default function List(props) {
     <div className="list">
       {displayTitle()}
       <button
-        className={submitClass + " undoBtn"}
+        className={submitClass + " undoBtn myButton"}
         onClick={undo}
         type="submit"
         name="undoButton"
@@ -712,7 +713,7 @@ export default function List(props) {
       </button>
       {" x " + undosRemaining + "  "}
       <button
-        className={submitClass + " redoBtn"}
+        className={submitClass + " redoBtn myButton"}
         onClick={redo}
         type="submit"
         name="redoButton"
@@ -731,7 +732,7 @@ export default function List(props) {
           ref={inputTxt}
         />
         <button
-          className={submitClass}
+          className={submitClass + " myButton"}
           onClick={handleSubmit}
           type="submit"
           name="submitButton"

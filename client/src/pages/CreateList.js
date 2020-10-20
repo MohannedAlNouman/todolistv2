@@ -6,7 +6,7 @@ import List from "../components/List";
 export default function CreateList(props) {
   function displayNavbar() {
     return (
-      <Navbar bg="dark" variant="dark">
+      <Navbar className="myNavbar" bg="dark" variant="dark">
         <Navbar.Brand>
           List App <span className="version">version 1.0.0</span>
         </Navbar.Brand>

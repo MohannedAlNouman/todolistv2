@@ -47,22 +47,57 @@
   margin: 5%;
 }
 
-.listTitle{
+.listTitle {
   margin: 5% 0 1% 0;
 }
 
 .listBox {
-  min-height: 720px;
+  min-height: 500px;
 }
 
-.undoBtn{
+.undoBtn {
   margin-bottom: 2%;
 }
 
-.editBtn{
+.editBtn {
   margin: 0 3px;
 }
 
 .textInput:focus {
   box-shadow: 0 0 3pt 2pt blue;
+}
+
+.myNavbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.topSpacer {
+  margin-bottom: 8%;
+}
+
+.myButton {
+  box-shadow: inset 0px 0px 15px 3px #23395e;
+  background: linear-gradient(to bottom, #2e466e 5%, #415989 100%);
+  background-color: #2e466e;
+  border-radius: 17px;
+  border: 1px solid #1f2f47;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: Arial;
+  font-size: 15px;
+  padding: 6px 13px;
+  text-decoration: none;
+  text-shadow: 0px 1px 0px #263666;
+}
+
+.myButton:hover {
+  background: linear-gradient(to bottom, #415989 5%, #2e466e 100%);
+  background-color: #415989;
+}
+
+.myButton:active {
+  position: relative;
+  top: 1px;
 }
