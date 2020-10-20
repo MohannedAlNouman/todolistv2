@@ -14,13 +14,13 @@ passport.deserializeUser(function(id, done) {
   });
 });
 
-//https://mohanned-todolistv2.herokuapp.com/auth/google/todolist
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/auth/google/todolist"
+      callbackURL:
+        "https://mohanned-todolistv2.herokuapp.com/auth/google/todolist"
     },
     function(accessToken, refreshToken, profile, done) {
       User.findOne(

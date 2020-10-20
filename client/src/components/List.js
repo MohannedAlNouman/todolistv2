@@ -33,10 +33,9 @@ export default function List(props) {
   //contains the list ID if available to save/update the list
   const listID = useRef(props.listId ? props.listId : "");
 
-  //https://mohanned-todolistv2.herokuapp.com/api/
   //specifies where to access the server to route to the DB
   const instance = axios.create({
-    baseURL: "http://localhost:3001/api/"
+    baseURL: "https://mohanned-todolistv2.herokuapp.com/api/"
   });
 
   //pulls user's saved List from DB and stores it in listArr

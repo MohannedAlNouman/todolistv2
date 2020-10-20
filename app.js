@@ -11,17 +11,6 @@ app.use(bodyParser.json());
 
 const db = require("./DB/index");
 
-//not needed for production
-const cors = require("cors");
-
-//not needed for production
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true // allow session cookie from browser to pass through
-  })
-);
-
 const passport = require("passport");
 require("./Auth/passport");
 const session = require("express-session");
