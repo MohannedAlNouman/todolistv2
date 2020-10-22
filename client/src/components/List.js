@@ -583,7 +583,7 @@ export default function List(props) {
   function displayNewList(newList, parentIndex) {
     const parInd = parentIndex ? parentIndex : [];
     return (
-      <ul className="listBox">
+      <ul>
         {newList.map((object, index) => {
           return (
             <div>
@@ -648,6 +648,16 @@ export default function List(props) {
                   >
                     <i className="fas fa-plus-circle"></i>
                   </button>
+                  <button
+                    className={submitClass + " myButton"}
+                    onClick={() => {
+                      closeTitleAndMovingInput(2);
+                    }}
+                    type="submit"
+                    name="closeMovingInput"
+                  >
+                    <i className="fas fa-times-circle"></i>
+                  </button>
                 </form>
               )}
             </div>
@@ -701,26 +711,28 @@ export default function List(props) {
 
   return (
     <div className="list">
-      {displayTitle()}
-      <button
-        className={submitClass + " undoBtn myButton"}
-        onClick={undo}
-        type="submit"
-        name="undoButton"
-      >
-        <i className="fas fa-undo"></i>
-      </button>
-      {" x " + undosRemaining + "  "}
-      <button
-        className={submitClass + " redoBtn myButton"}
-        onClick={redo}
-        type="submit"
-        name="redoButton"
-      >
-        <i className="fas fa-redo"></i>
-      </button>
-      {" x " + redosRemaining}
-      {displayNewList(listArr)}
+      <div className="listBox">
+        {displayTitle()}
+        <button
+          className={submitClass + " undoBtn myButton"}
+          onClick={undo}
+          type="submit"
+          name="undoButton"
+        >
+          <i className="fas fa-undo"></i>
+        </button>
+        {" x " + undosRemaining + "  "}
+        <button
+          className={submitClass + " redoBtn myButton"}
+          onClick={redo}
+          type="submit"
+          name="redoButton"
+        >
+          <i className="fas fa-redo"></i>
+        </button>
+        {" x " + redosRemaining}
+        {displayNewList(listArr)}
+      </div>
       <form>
         <input
           className={submitClass + " textInput"}
